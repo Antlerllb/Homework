@@ -1,52 +1,262 @@
 #include<iostream>
-#include<string>
-
+#define MAXSIZE 100 // 定义串的最大长度
 using namespace std;
 
-int Index_BF(string, string, int); //匹配则返回开始下标，否则返回-1 
-int Virus_detecion(string, string); //感染则返回1，否则返回0
+typedef struct // 串的结构体
+{
+	char ch[MAXSIZE + 1]; // 存储串的数据
+	int length; // 串的当前长度
+}SString;
+
+void InitList(SString& S) // 串的初始化
+{
+	S.length = 0; // 初始长度设为 0
+}
+
+void StrListInsert(SString& S) // 尾插法插入向串S中插入字符
+{
+	char ch;
+	cout << "请输入字符串的值(输入<回车>结束)：" << endl;
+	while ((ch = getchar()) != '\n') // 连续输入字符 输入 \n 停止
+	{
+		if (S.length + 1 > MAXSIZE) // 判断是否达到最大长度
+		{
+			cout << "已经达到串的最大长度！" << endl;
+			return;
+		}
+		S.ch[++S.length] = ch; // 使长度加一 将输入的非终止符插入到S.ch尾部
+	}
+	cout << ">> 成功输入！" << endl;
+}
+
+void StrLength(SString S) // 输出当前字符串的长度
+{
+	cout << "长度为：" << S.length << endl;
+}
+
+void StrCopy(SString& S, SString T) // 将串 T 中的元素复制到串 S
+{
+	S.length = 0;
+	while (S.length < T.length) // 逐字符将串T中的字符复制到串S中
+	{
+		S.length++;
+		S.ch[S.length] = T.ch[S.length];
+	}
+}
+
+void Concat(SString& T, SString S1, SString S2) // 将S1与S2连接储存在T中 顺序为S1 S2
+{
+	if (S1.length + S2.length > MAXSIZE) // 判断是否超出限度
+	{
+		cout << "合并后串的长度已经超出串允许的最大长度！" << endl;
+		return;
+	}
+	int i = 0;
+	StrCopy(T, S1); // 直接将串S1复制到串T中
+	while (T.length < S1.length + S2.length) // 继续复制串 S2 到 T
+	{
+		T.ch[++T.length] = S2.ch[++i];
+	}
+	cout << "连接成功！" << endl;
+}
+
+int BF(SString S, SString T, int pos) // BF算法
+// 返回模式串T在主串S中第pos个字符开始第一次出现的位置（若不存在 返回0） 
+{
+	if (T.length == 0) // 判断模式串是否为空串
+	{
+		cout << "模式串为空串！" << endl;
+		return 0;
+	}
+	int i = pos, j = 1; // 遍历时的索引变量
+	while (i <= S.length && j <= T.length)
+	{
+		if (S.ch[i] == T.ch[j]) // 对应位置相等 则主串与模式串同时转到下一个位置
+		{
+			++i;
+			++j;
+		}
+		else // 没有匹配成功
+		{
+			i = i - j + 2; // 主串转移到本趟初始位置的下一个位置
+			j = 1; // 模式串转移到初始位置
+		}
+	}
+	if (j > T.length) // 匹配成功
+		return i - T.length;
+	else // 匹配失败
+		return 0;
+}
+
+void BF_jinsi(SString S, SString T, int min) // BF算法 实现近似匹配
+{ // 模式串T在主串S中存在≥min位 即正确匹配 否则没有正确匹配 
+	if (T.length == 0)
+	{
+		cout << "模式串为空串！" << endl;
+		return;
+	}
+	int count = 0; // 定义一个计数器count
+	int i = 1, j = 1; // 遍历时所用到的变量
+	while (i <= S.length) // 当遍历到串S的结束时 结束循环
+	{
+		if (S.ch[i] == T.ch[j]) // 串的对应位置相等
+			count++; // 计数器count +1
+		else
+			count = 0; // 若不相等 则重新计数
+		i++;
+		j++;
+		if (count >= min) // 达到期望阈值 匹配成功
+		{
+			cout << "匹配成功！" << endl;
+			return;
+		}
+		if (j > T.length) // 对模式串T遍历完一轮
+		{
+			i = i - j + 2; // 使i恢复到起始位置的下一位置
+			j = 1; // 使j恢复到起始位置
+			count = 0; // 计数器清零
+		}
+	}
+	cout << "匹配失败！" << endl;
+}
+
+void get_next(SString T, int next[]) // 求模式串T的next[]值
+{
+	int i = 1, j = 0;
+	next[1] = 0;
+	while (i <= T.length)
+	{
+		if (j == 0 || T.ch[i] == T.ch[j])
+		{
+			++i;
+			++j;
+			next[i] = j;
+		}
+		else
+			j = next[j];
+	}
+}
+
+int KMP(SString S, SString T, int pos) // KMP算法
+{// 返回模式串T在主串S中第pos个字符开始第一次出现的位置（若不存在 返回0）
+	if (T.length == 0) // 判断是否为空串
+	{
+		cout << "模式串为空串！" << endl;
+		return 0;
+	}
+	int next[MAXSIZE + 1]; // 定义next[]
+	get_next(T, next); // 求next[]的值
+	int i = pos, j = 1; // 遍历时的索引变量
+	while (i <= S.length && j <= T.length) // 比较主串与模式串中的值
+	{
+		if (j == 0 || S.ch[i] == T.ch[j])
+		{
+			++i;
+			++j;
+		}
+		else
+			j = next[j];
+	}
+	if (j > T.length) // 匹配成功
+		return i - T.length;
+	else // 匹配失败
+		return 0;
+}
+
+void ShowList()
+{
+	cout << "********************************************" << endl;
+	cout << "**      -------串的实验系统-------        **" << endl;
+	cout << "********************************************" << endl;
+	cout << "**      -------串的基本操作-------        **" << endl;
+	cout << "**      1.向空串 S1 与 S2 中插入元素      **" << endl;
+	cout << "**      2.求串 S1 S2 T 的长度             **" << endl;
+	cout << "**      3.将串 S1 S2 连接后存储到串T中    **" << endl;
+	cout << "**      -------模式匹配算法-------        **" << endl;
+	cout << "**      4.输入模式匹配的主串与模式串      **" << endl;
+	cout << "**      5.BF算法模式匹配(输出所有位置)    **" << endl;
+	cout << "**      6.BF算法实现近似匹配              **" << endl;
+	cout << "**      7.KMP算法实现模式匹配             **" << endl;
+	cout << "********************************************" << endl;
+	cout << "**      0.退出程序                        **" << endl;
+	cout << "********************************************" << endl;
+}
 
 int main()
 {
-	int num;
-	string s,t;
-	cin>>num; 
-	for(int i=1;i<=num;i++)
+	SString S1, S2, T;
+	InitList(S1); // 串S1的初始化
+	InitList(S2); // 串S2的初始化
+	InitList(T); // 串T的初始化
+	SString S_z, S_m; // S_z为主串 S_m为模式串
+	InitList(S_z); // 串S_z的初始化
+	InitList(S_m); // 串S_m的初始化
+	ShowList();
+	while (1)
 	{
-		cin >> t >> s;
-	if(Virus_detecion(t, s)==1)	cout << "YES" << endl;
-	else cout << "NO" << endl;
-    }
-	return 0;	
-}
-
-int Index_BF(string s, string t, int pos)
-{//返回模式t在主串s中第pos个字符开始第一次出现的位置下标。
-//若不存在，则返回值为-1 
- //其中，t非空，1≤pos≤StrLength(s) 
-	int i,j;
-   	i = pos-1; //下标 
-	j = 0; //下标 
-   	while(i<s.length() && j<t.length()){ 
-      	if(s[i]==t[j]){++i; ++j;}	//继续比较后继字符 
-      	else{i=i-j+1; j=0;}	//指针后退重新开始匹配
-   }   
-   if(j==t.length()) return i-t.length(); //模式串全部读完，表示匹配，返回开始匹配位置的下标 
-   else return -1;   
-} 
-
-int Virus_detecion(string t, string s)
-{//求病毒DNA（环状）在人DNA中是否出现，有则返回在人DNA中第几个字符出现，无则返回0 
-	int num = t.length();
-	t += t; //模式串生成两次	
-	string temp; 
-	int res;
-	for (int i=0; i<num; i++){
-		temp.assign(t, i, num); 		
-		//cout << temp << endl;
-		res = Index_BF(s, temp, 1) ; //调用 Index_BF 检测本次的num个字符是否与s匹配 
-		if(res!=-1)  return 1; // 本次匹配，说明感染病毒 
+		int select;
+		int loc, min;
+		cout << "请输入您的选项：";
+		cin >> select;
+		if (select == 0)
+			break;
+		getchar(); // 吸收掉在缓存区的回车字符 避免对后续程序造成影响
+		switch (select)
+		{
+		case 1:
+			cout << "下面是对串 S1 的操作：" << endl;
+			StrListInsert(S1); // 向串S1中输入元素
+			cout << "下面是对串 S2 的操作：" << endl;
+			StrListInsert(S2); // 向串S2中插入元素
+			break;
+		case 2:
+			cout << "字符串 S1 的：";
+			StrLength(S1); // 求S1的长度
+			cout << "字符串 S2 的：";
+			StrLength(S2); // 求S2的长度
+			cout << "字符串 T 的：";
+			StrLength(T); // 求连接后的串T的长度
+			break;
+		case 3:
+			Concat(T, S1, S2); // 将S1与S2连接后 存储在T中
+			break;
+		case 4:
+			cout << "下面是对主串的操作：" << endl;
+			StrListInsert(S_z); // 向串S_z中输入元素
+			cout << "下面是对模式串的操作：" << endl;
+			StrListInsert(S_m); // 向串S_m中输入元素
+			break;
+		case 5:
+			loc = BF(S_z, S_m, 1); // BF算法匹配
+			cout << ">> BF算法匹配" << endl;
+			if (loc != 0)
+			{
+				cout << "模式串在主串中存在" << endl;
+				cout << ">> 所有匹配位置：";
+				for (int i = loc; i < loc + S_m.length; i++)
+					cout << i << " ";
+				cout << endl;
+			}
+			else
+				cout << "主串中不存在与模式串匹配的字串！" << endl;
+			break;
+		case 6:
+			cout << "请输入最小阈值: ";
+			cin >> min;
+			BF_jinsi(S_z, S_m, min); // BF算法近似比较
+			break;
+		case 7:
+			loc = KMP(S_z, S_m, 1); // KMP算法匹配
+			cout << ">> KMP算法匹配" << endl;
+			if (loc != 0)
+				cout << "模式串在主串中存在 >> 在主串中的起始位置为： " << loc << endl;
+			else
+				cout << "主串中不存在与模式串匹配的字串！" << endl;
+			break;
+		default:
+			cout << "请输入正确的选项！" << endl;
+			break;
+		}
 	}
-	
-	return 0; //所有检测都不匹配，说明没有感染病毒 
+	return 0;
 }
