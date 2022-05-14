@@ -1,0 +1,121 @@
+#include<iostream>
+#include<bits/stdc++.h>
+using namespace std;
+typedef struct BiNode {
+	char data;
+	struct BiNode* lchild, * rchild;
+
+}BiTNode, * BiTree;
+int CreateBiTree(BiTree& T)
+{
+	char ch;
+	cin >> ch;
+	if ((ch == NULL))
+	{
+		return 0;
+	}
+	if (ch == '#')
+	{
+		T = NULL;
+	}
+	else
+	{
+		T = new BiNode;
+		T->data = ch;
+		CreateBiTree(T->lchild);
+		CreateBiTree(T->rchild);
+	}
+	return 1;
+}
+int MidCreateBiTree(BiTree& T)
+{
+	char ch;
+	cin >> ch;
+	if ((ch == NULL))
+	{
+		return 0;
+	}
+	if (ch == '#')
+	{
+		T = NULL;
+	}
+	else
+	{
+		T = new BiNode;
+		MidCreateBiTree(T->lchild);
+		T->data = ch;
+		MidCreateBiTree(T->rchild);
+	}
+	return 1;
+}
+int FinCreateBiTree(BiTree& T)
+{
+	char ch;
+	cin >> ch;
+	if ((ch == NULL))
+	{
+		return 0;
+	}
+	if (ch == '#')
+	{
+		T = NULL;
+	}
+	else
+	{
+		T = new BiNode;
+		FinCreateBiTree(T->lchild);
+		FinCreateBiTree(T->rchild);
+		T->data = ch;
+	}
+	return 1;
+}
+void InOrderTraverse(BiTree T)
+{
+	if (T)
+	{
+
+		InOrderTraverse(T->lchild);
+		cout << T->data << " ";
+		InOrderTraverse(T->rchild);
+	}
+}
+void FirstOrderTraverse(BiTree T)
+{
+	if (T)
+	{
+		cout << T->data << " ";
+		FirstOrderTraverse(T->lchild);
+		FirstOrderTraverse(T->rchild);
+	}
+}
+void FinalOrderTraverse(BiTree T)
+{
+	if (T)
+	{
+
+		FinalOrderTraverse(T->lchild);
+		FinalOrderTraverse(T->rchild);
+		cout << T->data << " ";
+	}
+}
+int main()
+{
+	/*int num = 0;
+	int num_one = 0;
+	bool flag = 1;
+	for (int i = 0; i <= num; i++)
+	{
+		BiTree tree;
+		num += CreateBiTree(tree);
+		if (num_one == num)
+		{
+			break;
+		}
+		InOrderTraverse(tree);
+		cout << endl;
+		num_one = num;
+	}*/
+	BiTree tree;
+	CreateBiTree(tree);
+	InOrderTraverse(tree);
+}
